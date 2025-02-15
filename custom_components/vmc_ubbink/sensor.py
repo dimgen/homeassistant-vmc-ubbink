@@ -92,7 +92,7 @@ class VMCUbifluxSensor(SensorEntity):
         self._sensor_type = sensor_type
         self._params = params
 
-        self._attr_name = params["name"]
+        self._attr_name = 'VMC ' + params["name"]
         self._attr_unique_id = f"vmc_{sensor_type}_{entry_id}"
 
         # If we know for sure that this is a numeric sensor, we can use:
