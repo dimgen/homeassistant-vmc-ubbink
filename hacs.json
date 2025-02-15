@@ -1,0 +1,11 @@
+{
+  "name": "VMC Ubbink",
+  "domain": "vmc_ubbink",
+  "country": "GLOBAL",
+  "homeassistant": "2023.1.0",
+  "render_readme": true,
+  "zip_release": false,
+  "filename": "custom_components/vmc_ubbink/",
+  "source": "https://github.com/dimgen/homeassistant-vmc-ubbink",
+  "iot_class": "Local Polling"
+}

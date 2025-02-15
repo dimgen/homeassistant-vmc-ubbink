@@ -1,0 +1,15 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "VMC Ubbink Settings",
+        "data": {
+          "host": "Server Host",
+          "port": "Server Port",
+          "username": "Username",
+          "password": "Password"
+        }
+      }
+    }
+  }
+}

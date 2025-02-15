@@ -1,0 +1,10 @@
+{
+  "domain": "vmc_ubbink",
+  "name": "VMC Ubbink",
+  "version": "1.0.0",
+  "config_flow": true,
+  "documentation": "https://github.com/dimgen/homeassistant-vmc-ubbink",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": ["@dimgen"]
+}
