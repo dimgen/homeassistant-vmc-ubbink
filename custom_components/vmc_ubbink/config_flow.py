@@ -11,7 +11,7 @@ class VMCUbifluxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema({
                 vol.Required(CONF_HOST, default="localhost"): str,
-                vol.Required(CONF_PORT, default=8080): int,
+                vol.Required(CONF_PORT, default=8085): int,
                 vol.Required(CONF_USERNAME, default="admin"): str,
                 vol.Required(CONF_PASSWORD, default="secret"): str,
             }),

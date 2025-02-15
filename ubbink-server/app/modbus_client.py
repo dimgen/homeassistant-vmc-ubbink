@@ -11,7 +11,7 @@ class ModbusController:
             bytesize=8,
             parity='N',
             method="rtu",
-            timeout=60
+            timeout=10
         )
         self.device = None
 

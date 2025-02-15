@@ -16,12 +16,12 @@ The server code is based on the [pyubbink](https://github.com/asillye/pyubbink).
 ---
 
 ## 🚀 **Installation Guide**
-### **1️⃣ Install the Ubiflux Server**
+### **1️⃣ Install the Ubbink Server**
 To install the server, run the following commands on a device with **Docker & Docker Compose**:
 
 ```sh
 git clone https://github.com/dimgen/homeassistant-vmc-ubbink.git
-cd server
+cd ubbink-server
 docker-compose up --build -d
 ```
 The server will expose an API on port **8085** by default (configurable via .env).
@@ -37,7 +37,7 @@ Option a) **Via HACS**:
 
 Option b) **Manual Installation**:
 
-1. Download this repository and place it inside Home Assistant's `custom_components` folder.
+1. Download this repository and place `custom_components/vmc_ubbink` folder inside Home Assistant's `custom_components` folder.
 2. Restart Home Assistant.
 
 ## 🔧 Configuration
@@ -47,7 +47,7 @@ Option b) **Manual Installation**:
 1. Go to **Settings** → **Devices & Services**.
 2. Click **+ Add Integration** → Search for **VMC Ubbink Ubiflux**.
 3. Enter the connection details:
-- **Server Host** (IP/hostname of the Ubiflux server)
+- **Server Host** (IP/hostname of the Ubbink server)
 - **Server Port** (default: `8085`)
 - **Username & Password** (from `.env` file in server)
 4. Click **Submit**.
@@ -99,12 +99,12 @@ entities:
 ## 🛠 Troubleshooting
 
 ### Connection Issues
--	Ensure the Ubiflux Server is running and accessible from Home Assistant.
+-	Ensure the Ubbink Server is running and accessible from Home Assistant.
 -	Check if the correct host/port is entered in the integration settings.
 -	Look at the server logs using:
 
 ```sh
-docker logs vmc-ubbink-server
+docker logs ubbink-server
 ```
 
 ### Data Not Updating

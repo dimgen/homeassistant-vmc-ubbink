@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    env_file:
+      - .env
+    environment:
+      - USE_X_FORWARDED_FOR=True
+    network_mode: "host"  # to see real IP addresses in Docker logs. If not needed, the following ports can be used instead:
+    #ports:
+    #  - "${PORT}:${PORT}"
+    restart: unless-stopped
+    privileged: true
+    devices:
+      - "${DEVICE_PORT}:${DEVICE_PORT}"
+    cap_add:
+      - SYS_ADMIN
