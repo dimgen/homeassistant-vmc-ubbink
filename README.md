@@ -79,6 +79,125 @@ Once added, Home Assistant recognizes **VMC Ubiflux as a single device** with th
 | **Airflow Mode**   | `select.vmc_airflow_mode` | Select  | `wall_unit`, `holiday`, `low`, `normal`, `high` |
 | **Airflow Rate**   | `number.vmc_airflow_rate` | Number  | `50-400` m³/h |
 
+![Screenshot](screenshot.png)
+
+#### Sample Automations
+#### 1. Set airflow speed based on CO2 sensor (linear interpolation)
+```yaml
+alias: Update VMC airflow speed based on CO2
+description: >-
+  Linearly adjusts ventilation speed (100–220, steps of 5) based on CO2
+  (600–1000).
+triggers:
+  - entity_id: sensor.max_co2
+    trigger: state
+conditions: []
+actions:
+  - variables:
+      co2_value: "{{ states('sensor.max_co2') | float(0) }}"
+  - variables:
+      new_speed: >-
+        {% set min_co2 = 600 %} {% set max_co2 = 1000 %} {% set min_speed = 100
+        %} {% set max_speed = 220 %}
+
+        {% if co2_value <= min_co2 %}
+          {{ min_speed }}
+        {% elif co2_value >= max_co2 %}
+          {{ max_speed }}
+        {% else %}
+          {% set interpolated = min_speed
+              + (co2_value - min_co2) / (max_co2 - min_co2)
+                * (max_speed - min_speed) %}
+          {{ ((interpolated / 5) | round(0) * 5) | int }}
+        {% endif %}
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: |
+              {{ states('number.airflow_rate') | float(0)
+                 != new_speed | float(0) }}
+        sequence:
+          - target:
+              entity_id: number.airflow_rate
+            data:
+              value: "{{ new_speed }}"
+            action: number.set_value
+mode: single
+```
+
+#### 2. Set mode based on CO2 sensor (>= 1000 - high, >= 800 - normal, >= 600 - low, < 600 - holiday)
+```yaml
+alias: Update VMC mode based on CO2
+description: Sets airflow mode based on maximum CO2.
+triggers:
+  - entity_id: sensor.max_co2
+    trigger: state
+conditions: []
+actions:
+  - choose:
+      - conditions:
+          - condition: numeric_state
+            entity_id: sensor.max_co2
+            above: 1000
+        sequence:
+          - choose:
+              - conditions:
+                  - condition: template
+                    value_template: "{{ states('sensor.airflow_mode') != 'high' }}"
+                sequence:
+                  - target:
+                      entity_id: select.airflow_mode
+                    data:
+                      option: high
+                    action: select.select_option
+          - stop: CO2 above 1000 - done.
+      - conditions:
+          - condition: numeric_state
+            entity_id: sensor.max_co2
+            above: 800
+        sequence:
+          - choose:
+              - conditions:
+                  - condition: template
+                    value_template: "{{ states('sensor.airflow_mode') != 'normal' }}"
+                sequence:
+                  - target:
+                      entity_id: select.airflow_mode
+                    data:
+                      option: normal
+                    action: select.select_option
+          - stop: CO2 above 800 - done.
+      - conditions:
+          - condition: numeric_state
+            entity_id: sensor.max_co2
+            above: 600
+        sequence:
+          - choose:
+              - conditions:
+                  - condition: template
+                    value_template: "{{ states('sensor.airflow_mode') != 'low' }}"
+                sequence:
+                  - target:
+                      entity_id: select.airflow_mode
+                    data:
+                      option: low
+                    action: select.select_option
+          - stop: CO2 above 600 - done.
+    default:
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ states('sensor.airflow_mode') != 'holiday' }}"
+            sequence:
+              - target:
+                  entity_id: select.airflow_mode
+                data:
+                  option: holiday
+                action: select.select_option
+mode: single
+
+```
+
 ---
 
 ## 🛠 Troubleshooting
