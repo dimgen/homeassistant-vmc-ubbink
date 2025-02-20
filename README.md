@@ -85,6 +85,48 @@ Once added, Home Assistant recognizes **VMC Ubiflux as a single device** with th
 #### 1. Set airflow speed based on CO2 sensor (linear interpolation)
 ```yaml
 alias: Update VMC airflow speed based on CO2
+description: Linearly adjusts ventilation speed (50–220) based on CO2 (to be in range 550-1000).
+triggers:
+  - entity_id: sensor.max_co2
+    trigger: state
+conditions: []
+actions:
+  - variables:
+      co2_value: "{{ states('sensor.max_co2') | float(0) }}"
+  - variables:
+      new_speed: >-
+        {% set min_co2 = 550 %} {% set max_co2 = 1000 %} {% set min_speed = 50
+        %} {% set max_speed = 220 %}
+
+        {% if co2_value <= min_co2 %}
+          {{ min_speed }}
+        {% elif co2_value >= max_co2 %}
+          {{ max_speed }}
+        {% else %}
+          {% set interpolated = min_speed
+            + (co2_value - min_co2)
+              / (max_co2 - min_co2)
+              * (max_speed - min_speed) %}
+          {{ interpolated | round(0) }}
+        {% endif %}
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: |
+              {{ states('number.airflow_rate') | float(0)
+                 != new_speed | float(0) }}
+        sequence:
+          - target:
+              entity_id: number.airflow_rate
+            data:
+              value: "{{ new_speed }}"
+            action: number.set_value
+mode: single
+```
+
+#### 2. Set airflow speed (100–220, steps of 5) based on CO2 sensor with steps of 5
+```yaml
+alias: Update VMC airflow speed based on CO2
 description: >-
   Linearly adjusts ventilation speed (100–220, steps of 5) based on CO2
   (600–1000).
@@ -125,7 +167,7 @@ actions:
 mode: single
 ```
 
-#### 2. Set mode based on CO2 sensor (>= 1000 - high, >= 800 - normal, >= 600 - low, < 600 - holiday)
+#### 3. Set mode based on CO2 sensor (>= 1000 - high, >= 800 - normal, >= 600 - low, < 600 - holiday)
 ```yaml
 alias: Update VMC mode based on CO2
 description: Sets airflow mode based on maximum CO2.
@@ -195,7 +237,6 @@ actions:
                   option: holiday
                 action: select.select_option
 mode: single
-
 ```
 
 ---

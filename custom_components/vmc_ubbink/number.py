@@ -12,8 +12,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
 class VMCUbifluxNumber(NumberEntity):
     _attr_name = "Airflow Rate"
     _attr_native_min_value = 50
-    _attr_native_max_value = 400
-    _attr_native_step = 5
+    _attr_native_max_value = 400  # 220 for W325
+    _attr_native_step = 1
 
     def __init__(self, api, entry_id):
         self.api = api
