@@ -25,6 +25,7 @@ Run the following commands on a device with **Docker & Docker Compose**:
 ```sh
 git clone https://github.com/dimgen/homeassistant-vmc-ubbink.git
 cd homeassistant-vmc-ubbink/ubbink-server
+touch .env
 docker-compose up --build -d
 ```
 
