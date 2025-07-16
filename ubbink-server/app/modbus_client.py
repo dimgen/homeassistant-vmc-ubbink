@@ -64,3 +64,15 @@ class ModbusController:
 
         self.device.set_custom_airflow_rate(rate)
         return {"status": f"Airflow rate set to {rate} m³/h"}
+
+ # NEW: Added bypass mode control method
+    def set_bypass_mode(self, mode: str):
+        if not self.device:
+            return {"error": "Device not connected"}
+        
+        valid_modes = ["auto", "open", "closed"]
+        if mode not in valid_modes:
+            return {"error": "Invalid bypass mode. Valid values: 'auto', 'open', 'closed'"}
+        
+        self.device.set_bypass_mode(mode)
+        return {"status": f"Bypass mode set to {mode}"}
