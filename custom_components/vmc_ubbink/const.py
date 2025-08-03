@@ -7,3 +7,5 @@ CONF_PASSWORD = "password"
 
 DEFAULT_HOST = "localhost"
 DEFAULT_PORT = 8085
+DEFAULT_USERNAME = "admin"
+DEFAULT_PASSWORD = "secret"
