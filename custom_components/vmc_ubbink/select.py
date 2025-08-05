@@ -22,6 +22,7 @@ class VMCUbifluxSelect(SelectEntity):
         self._entry_id = entry_id
         self._attr_unique_id = f"vmc_airflow_mode_{entry_id}"
         self._attr_current_option = None
+        self._pending_option = None  # For optimistic update
 
     @property
     def device_info(self):
@@ -33,12 +34,18 @@ class VMCUbifluxSelect(SelectEntity):
             "entry_type": DeviceEntryType.SERVICE,
         }
 
+    @property
+    def current_option(self):
+        if self._pending_option is not None:
+            return self._pending_option
+        return self._attr_current_option
+
     async def async_select_option(self, option: str) -> None:
         """Select new mode."""
-        # If the API method is synchronous, wrap it in an executor_job:
-        await self.hass.async_add_executor_job(self.api.set_airflow_mode, option)
-        self._attr_current_option = option
+        self._pending_option = option
         self.async_write_ha_state()
+        await self.hass.async_add_executor_job(self.api.set_airflow_mode, option)
+        # Do not set self._attr_current_option here, wait for update
 
     async def async_update(self) -> None:
         """Asynchronously update state."""
@@ -47,3 +54,5 @@ class VMCUbifluxSelect(SelectEntity):
             current_mode = data.get("airflow_mode")
             if current_mode in MODES:
                 self._attr_current_option = current_mode
+                if self._pending_option is not None and current_mode == self._pending_option:
+                    self._pending_option = None
