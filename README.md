@@ -241,6 +241,13 @@ mode: single
 
 ---
 
+## 💡 Good to know
+### 📟 Connecting a wall unit (LCD controller or not) with this integration
+You can use your **Ubbink Wall Controller** with this integration. However, it seems that the controller always has the priority. When you change the airflow on the controller, the integration's setting is bypassed.
+Also, it seems that you cannot set an airflow lower than the controller's setting from the integration. The best is thus to set the controller on the minimal setting (eg: 1/4) and control the airflow via Hass. This provides a fallback via the wall unit.
+
+---
+
 ## 🛠 Troubleshooting
 ### ❌ Connection Issues
 - Ensure the Ubbink Server is **running and accessible** from Home Assistant.
@@ -249,6 +256,11 @@ mode: single
   ```sh
   docker logs ubbink-server
   ```
+
+### ❌ Parity Issues (No data)
+- If you see errors such as `Error: [Input/Output] Modbus Error: [Invalid Message] No response received, expected at least 2 bytes (0 received)` in your server logs, that can be a parity issue.
+- The integration is using **No parity**, but, by default the W400 seems to be configured with parity **Odd**.
+- You should thus change the parity configuration in your machine's menu to use **No parity**.
 
 ### ❌ Data Not Updating
 - Restart Home Assistant after adding the integration.
