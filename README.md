@@ -260,7 +260,7 @@ Also, it seems that you cannot set an airflow lower than the controller's settin
 ### ❌ Parity Issues (No data)
 - If you see errors such as `Error: [Input/Output] Modbus Error: [Invalid Message] No response received, expected at least 2 bytes (0 received)` in your server logs, that can be a parity issue.
 - The integration is using **No parity**, but, by default the W400 seems to be configured with parity **Odd**.
-- You should thus change the parity configuration in your machine's menu to use **No parity**.
+- You should thus change the parity configuration in your machine's menu to use **No parity** : ⚙ ➤ 14. Communication ➤ 4. Parity ➤ No
 
 ### ❌ Data Not Updating
 - Restart Home Assistant after adding the integration.
