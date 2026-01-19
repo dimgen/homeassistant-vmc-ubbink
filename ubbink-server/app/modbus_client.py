@@ -32,10 +32,12 @@ class ModbusController:
             "serial_number": self.device.get_serial_number(),
             "supply_temperature": self.device.get_supply_temperature(),
             "supply_pressure": self.device.get_supply_pressure(),
+            "supply_humidity": self.device.get_supply_humidity(),
             "supply_airflow_actual": self.device.get_supply_airflow_actual(),
             "supply_airflow_preset": self.device.get_supply_airflow_preset(),
             "extract_temperature": self.device.get_extract_temperature(),
             "extract_pressure": self.device.get_extract_pressure(),
+            "extract_humidity": self.device.get_extract_humidity(),
             "extract_airflow_actual": self.device.get_extract_airflow_actual(),
             "extract_airflow_preset": self.device.get_extract_airflow_preset(),
             "airflow_mode": self.device.get_airflow_mode(),
@@ -65,7 +67,7 @@ class ModbusController:
         self.device.set_custom_airflow_rate(rate)
         return {"status": f"Airflow rate set to {rate} m³/h"}
 
- # NEW: Added bypass mode control method
+    # NEW: Added bypass mode control method
     def set_bypass_mode(self, mode: str):
         if not self.device:
             return {"error": "Device not connected"}
