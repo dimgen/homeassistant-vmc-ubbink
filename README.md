@@ -25,7 +25,7 @@ Run the following commands on a device with **Docker & Docker Compose**:
 ```sh
 git clone https://github.com/dimgen/homeassistant-vmc-ubbink.git
 cd homeassistant-vmc-ubbink/ubbink-server
-docker-compose up --build -d
+docker compose up --build -d
 ```
 
 By default, the server exposes an API on **port 8085** (configurable via `.env`).
