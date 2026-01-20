@@ -21,6 +21,12 @@ SENSOR_TYPES = {
         "device_class": "pressure",
         "state_class": "measurement",
     },
+    "supply_humidity": {
+        "name": "Supply Humidity",
+        "unit": "%",
+        "device_class": "humidity",
+        "state_class": "measurement",
+    },
     "supply_airflow_actual": {
         "name": "Supply Airflow Actual",
         "unit": "m³/h",
@@ -40,6 +46,12 @@ SENSOR_TYPES = {
         "name": "Extract Pressure",
         "unit": "Pa",
         "device_class": "pressure",
+        "state_class": "measurement",
+    },
+    "extract_humidity": {
+        "name": "Extract Humidity",
+        "unit": "%",
+        "device_class": "humidity",
         "state_class": "measurement",
     },
     "extract_airflow_actual": {
