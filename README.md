@@ -4,6 +4,31 @@ This integration allows you to connect and control your **Ubbink Ubiflux Vigor**
 
 ---
 
+## 🔀 Two connection modes
+
+This integration supports **two ways** to talk to the VMC. You pick one when adding
+the integration, and can switch later via **Settings → Devices & Services → VMC
+Ubbink → Configure** (switching keeps your entities and history).
+
+### Direct (Waveshare RS485-to-ETH) — no extra device
+Home Assistant talks to the VMC directly over your network through an Ethernet-to-RS485
+gateway (e.g. **Waveshare RS485 to ETH (B)**). No Docker, no separate host.
+
+Gateway setup (Waveshare, "transparent"/RTU mode):
+- Baudrate **19200**, data **8**, parity **None**, stop **1** (8N1)
+- Work mode: **TCP Server**, protocol: transparent (raw RTU over TCP)
+- Note the gateway **IP** and **TCP port** (default `502`)
+- Wire RS485 to the VMC's red Modbus port X15: **A→2, B→3, GND→1**
+
+Then add the integration → choose **Direct**, enter the gateway IP, TCP port (`502`),
+and the Modbus slave address (default `20`).
+
+### Server (HTTP) — original mode
+Runs the included Python server (`ubbink-server`) in Docker; Home Assistant talks to it
+over HTTP. See the server setup below. Existing installs keep working unchanged.
+
+---
+
 ## 📌 Important: Requires a Server (included in this repo) for Modbus RTU Connection
 This integration requires a **Python server** running in a **Docker container**, which:
 - Reads data from the Ubiflux system using **Modbus RTU**.
