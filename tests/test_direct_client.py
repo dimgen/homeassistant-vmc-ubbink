@@ -15,22 +15,15 @@ class FakeClock:
 
 
 def _device_returning(values):
-    """VigorDevice-like stub: each get_* returns the value from `values` by key."""
+    """VigorDevice-like stub driven by direct._READERS (the source of truth).
+
+    Each reader's getter returns the matching entry from `values`; readers not
+    listed in `values` fall back to a deterministic placeholder, so adding a new
+    entry to _READERS doesn't require touching this helper.
+    """
     dev = MagicMock()
-    dev.get_serial_number.return_value = values["serial_number"]
-    dev.get_supply_temperature.return_value = values["supply_temperature"]
-    dev.get_supply_pressure.return_value = values["supply_pressure"]
-    dev.get_supply_humidity.return_value = values["supply_humidity"]
-    dev.get_supply_airflow_actual.return_value = values["supply_airflow_actual"]
-    dev.get_supply_airflow_preset.return_value = values["supply_airflow_preset"]
-    dev.get_extract_temperature.return_value = values["extract_temperature"]
-    dev.get_extract_pressure.return_value = values["extract_pressure"]
-    dev.get_extract_humidity.return_value = values["extract_humidity"]
-    dev.get_extract_airflow_actual.return_value = values["extract_airflow_actual"]
-    dev.get_extract_airflow_preset.return_value = values["extract_airflow_preset"]
-    dev.get_airflow_mode.return_value = values["airflow_mode"]
-    dev.get_bypass_status.return_value = values["bypass_status"]
-    dev.get_filter_status.return_value = values["filter_status"]
+    for key, getter in direct._READERS.items():
+        getattr(dev, getter).return_value = values.get(key, f"<{key}>")
     return dev
 
 
@@ -56,7 +49,9 @@ def test_get_data_returns_all_keys():
     dev = _device_returning(_FULL)
     client = direct.DirectClient("1.2.3.4", 502, 20, _device=dev, _clock=FakeClock())
     data = client.get_data()
-    assert set(data.keys()) == set(_FULL.keys())
+    # Source of truth is the reader map, not a frozen snapshot: adding a sensor
+    # to direct._READERS should not require editing this test.
+    assert set(data.keys()) == set(direct._READERS)
     assert data["supply_temperature"] == 21.5
     assert data["supply_humidity"] == 45
 
