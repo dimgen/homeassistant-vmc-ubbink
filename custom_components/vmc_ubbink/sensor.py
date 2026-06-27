@@ -62,6 +62,22 @@ SENSOR_TYPES = {
         "name": "Extract Airflow Preset",
         "unit": "m³/h",
     },
+    "outdoor_temperature": {
+        "name": "Outdoor Temperature",
+        "unit": "°C",
+        "device_class": "temperature",
+        "state_class": "measurement",
+    },
+    "supply_fan_speed": {
+        "name": "Supply Fan Speed",
+        "unit": "rpm",
+        "state_class": "measurement",
+    },
+    "exhaust_fan_speed": {
+        "name": "Exhaust Fan Speed",
+        "unit": "rpm",
+        "state_class": "measurement",
+    },
     "airflow_mode": {
         "name": "Airflow Mode",
         "unit": None,  # just a string
