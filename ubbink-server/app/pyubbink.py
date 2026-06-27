@@ -249,6 +249,53 @@ class VigorDevice():
         _log.debug("get_bypass_status: " + result)
         return result
 
+    def get_bypass_mode(self):
+        """
+        Gets the configured bypass mode (holding register 6100, "Bypass mode"
+        per the Brink UWA2 Modbus manual): 0=auto, 1=closed, 2=open.
+
+        Note this differs from get_bypass_status (4050), which reports the live
+        valve position (opening/closing/open/closed).
+        """
+        command = 6100
+        rr = self.client.read_holding_registers(command, 1, unit=self.UNIT)
+        if rr.isError():
+            return self._handle_error(rr, "get_bypass_mode", command)
+
+        _bypass_modes = {0: "auto", 1: "closed", 2: "open"}
+        value = rr.registers[0]
+        result = _bypass_modes.get(value, "unknown (" + str(value) + ")")
+        _log.debug("get_bypass_mode: " + result)
+        return result
+
+    def set_bypass_mode(self, mode):
+        """
+        Sets the bypass mode (holding register 6100): "auto"=0, "closed"=1,
+        "open"=2. 6100 is an independent setting register, so unlike the fan
+        controls it does not require enabling Modbus control (8000).
+        """
+        _bypass_modes = {"auto": 0, "closed": 1, "open": 2}
+        if isinstance(mode, int):
+            mode_value = min(2, max(0, mode))
+        elif mode in _bypass_modes:
+            mode_value = _bypass_modes[mode]
+        else:
+            _log.error("set_bypass_mode: invalid mode " + str(mode))
+            return
+
+        command = 6100
+        rr = self.client.read_holding_registers(command, 1, unit=self.UNIT)
+        if rr.isError():
+            return self._handle_error(rr, "set_bypass_mode.1", command)
+
+        if rr.registers[0] != mode_value:
+            _log.debug("set_bypass_mode: setting bypass mode to " + str(mode_value) + " in range [0-2]")
+            rr = self.client.write_register(command, mode_value, unit=self.UNIT)
+            if rr.isError():
+                return self._handle_error(rr, "set_bypass_mode.2", command)
+        else:
+            _log.debug("set_bypass_mode: bypass mode is already " + str(mode_value))
+
     def get_filter_status(self):
         """ 
         Gets the filter status: dirty/normal

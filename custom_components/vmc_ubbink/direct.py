@@ -38,6 +38,7 @@ _READERS = {
     "exhaust_fan_speed": "get_exhaust_fan_speed",
     "airflow_mode": "get_airflow_mode",
     "bypass_status": "get_bypass_status",
+    "bypass_mode": "get_bypass_mode",
     "filter_status": "get_filter_status",
 }
 
@@ -118,6 +119,5 @@ class DirectClient:
         return err or {"status": f"Airflow rate set to {rate} m³/h"}
 
     def set_bypass_mode(self, mode):
-        # Interface parity with ServerClient; not supported by the vendored register map.
-        _LOGGER.debug("set_bypass_mode(%s) ignored: not supported in direct mode", mode)
-        return {"status": "bypass mode not supported in direct mode"}
+        err = self._set(self._device.set_bypass_mode, mode)
+        return err or {"status": f"Bypass mode set to {mode}"}

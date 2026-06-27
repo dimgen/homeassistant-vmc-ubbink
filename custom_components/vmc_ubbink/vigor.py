@@ -48,6 +48,10 @@ _BYPASS_STATUS = {
 _AIRFLOW_MODE_FROM_8001 = {0: "holiday", 1: "low", 2: "normal", 3: "high"}
 _AIRFLOW_MODE_TO_8001 = {"holiday": 0, "low": 1, "normal": 2, "high": 3}
 
+# Bypass mode is holding register 6100: 0=auto, 1=closed, 2=open (Brink UWA2 manual).
+_BYPASS_MODE_FROM_6100 = {0: "auto", 1: "closed", 2: "open"}
+_BYPASS_MODE_TO_6100 = {"auto": 0, "closed": 1, "open": 2}
+
 
 class VigorDevice:
     """Named read/write commands for the Vigor W325/W400 over a pymodbus client."""
@@ -142,6 +146,19 @@ class VigorDevice:
             return "custom"
         value = self._read_holding(8001)[0]
         return _AIRFLOW_MODE_FROM_8001.get(value, f"unknown ({value})")
+
+    def get_bypass_mode(self):
+        # 6100 "Bypass mode": independent of the live position in get_bypass_status (4050).
+        value = self._read_holding(6100)[0]
+        return _BYPASS_MODE_FROM_6100.get(value, f"unknown ({value})")
+
+    def set_bypass_mode(self, mode):
+        if mode not in _BYPASS_MODE_TO_6100:
+            _LOGGER.warning("set_bypass_mode: unsupported mode %r, ignored", mode)
+            return
+        value = _BYPASS_MODE_TO_6100[mode]
+        if self._read_holding(6100)[0] != value:
+            self._write(6100, value)
 
     def set_modbus_mode(self, mode):
         """Switch the control mode (8000). Critical: writes are not applied without it."""
