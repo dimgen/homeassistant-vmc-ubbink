@@ -103,11 +103,20 @@ def test_set_airflow_mode_delegates():
     dev.set_airflow_mode.assert_called_once_with("high")
 
 
-def test_set_bypass_mode_is_noop():
+def test_set_bypass_mode_delegates():
     dev = _device_returning(_FULL)
     client = direct.DirectClient("1.2.3.4", 502, 20, _device=dev, _clock=FakeClock())
-    result = client.set_bypass_mode("auto")
+    result = client.set_bypass_mode("open")
+    dev.set_bypass_mode.assert_called_once_with("open")
     assert "error" not in result
-    assert not dev.method_calls or all(
-        not str(c).startswith("set_bypass_mode") for c in dev.method_calls
-    )
+
+
+def test_set_bypass_mode_invalidates_cache():
+    dev = _device_returning(_FULL)
+    clock = FakeClock()
+    client = direct.DirectClient("1.2.3.4", 502, 20, _device=dev, _clock=clock)
+    client.get_data()
+    assert dev.get_serial_number.call_count == 1
+    client.set_bypass_mode("closed")
+    client.get_data()  # cache invalidated → re-poll even within TTL
+    assert dev.get_serial_number.call_count == 2

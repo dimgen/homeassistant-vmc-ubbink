@@ -113,6 +113,45 @@ def test_bypass_status_map():
     assert dev.get_bypass_status() == "unknown (99)"
 
 
+def test_get_bypass_mode_map():
+    client = MagicMock()
+    dev = vigor.VigorDevice(client, slave=20)
+    client.read_holding_registers.return_value = _resp([0])
+    assert dev.get_bypass_mode() == "auto"
+    client.read_holding_registers.return_value = _resp([1])
+    assert dev.get_bypass_mode() == "closed"
+    client.read_holding_registers.return_value = _resp([2])
+    assert dev.get_bypass_mode() == "open"
+    client.read_holding_registers.return_value = _resp([9])
+    assert dev.get_bypass_mode() == "unknown (9)"
+    client.read_holding_registers.assert_called_with(6100, count=1, slave=20)
+
+
+def test_set_bypass_mode_writes_6100_when_changed():
+    client = MagicMock()
+    dev = vigor.VigorDevice(client, slave=20)
+    client.read_holding_registers.return_value = _resp([0])  # currently auto
+    client.write_register.return_value = _resp([], error=False)
+    dev.set_bypass_mode("open")
+    client.write_register.assert_called_once_with(6100, 2, slave=20)
+
+
+def test_set_bypass_mode_skips_write_when_already_set():
+    client = MagicMock()
+    dev = vigor.VigorDevice(client, slave=20)
+    client.read_holding_registers.return_value = _resp([1])  # already closed
+    dev.set_bypass_mode("closed")
+    client.write_register.assert_not_called()
+
+
+def test_set_bypass_mode_ignores_unsupported_mode():
+    client = MagicMock()
+    dev = vigor.VigorDevice(client, slave=20)
+    dev.set_bypass_mode("wall_unit")
+    client.write_register.assert_not_called()
+    client.read_holding_registers.assert_not_called()
+
+
 def test_filter_status():
     client = MagicMock()
     dev = vigor.VigorDevice(client, slave=20)
