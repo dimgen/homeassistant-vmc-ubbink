@@ -39,6 +39,23 @@ def test_extract_temperature_divides_by_ten():
     client.read_input_registers.assert_called_once_with(4046, count=1, slave=7)
 
 
+def test_outdoor_temperature_divides_by_ten():
+    client = MagicMock()
+    client.read_input_registers.return_value = _resp([376])
+    dev = vigor.VigorDevice(client, slave=20)
+    assert dev.get_outdoor_temperature() == 37.6
+    client.read_input_registers.assert_called_once_with(4081, count=1, slave=20)
+
+
+def test_outdoor_temperature_negative_is_signed():
+    client = MagicMock()
+    # 16-bit signed: 65413 == -123 -> -12.3 °C (outdoor goes negative in winter)
+    client.read_input_registers.return_value = _resp([65413])
+    dev = vigor.VigorDevice(client, slave=20)
+    assert dev.get_outdoor_temperature() == -12.3
+    client.read_input_registers.assert_called_once_with(4081, count=1, slave=20)
+
+
 def test_humidity_passthrough():
     client = MagicMock()
     client.read_input_registers.return_value = _resp([47])
@@ -67,6 +84,22 @@ def test_pressure_and_airflow_registers():
     assert dev.get_extract_airflow_actual() == 120
     addresses = [c.args[0] for c in client.read_input_registers.call_args_list]
     assert addresses == [4023, 4024, 4031, 4032, 4041, 4042]
+
+
+def test_supply_fan_speed_register():
+    client = MagicMock()
+    client.read_input_registers.return_value = _resp([1238])
+    dev = vigor.VigorDevice(client, slave=20)
+    assert dev.get_supply_fan_speed() == 1238
+    client.read_input_registers.assert_called_once_with(4034, count=1, slave=20)
+
+
+def test_exhaust_fan_speed_register():
+    client = MagicMock()
+    client.read_input_registers.return_value = _resp([980])
+    dev = vigor.VigorDevice(client, slave=7)
+    assert dev.get_exhaust_fan_speed() == 980
+    client.read_input_registers.assert_called_once_with(4044, count=1, slave=7)
 
 
 def test_bypass_status_map():

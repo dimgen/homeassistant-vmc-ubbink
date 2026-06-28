@@ -183,8 +183,52 @@ class VigorDevice():
         _log.debug("get_extract_humidity: " + str(result) + " %")
         return result
 
+    def get_outdoor_temperature(self):
+        """
+        Gets the outdoor air temperature in Celsius (register 4081, "NTC 1: Air
+        temperature sensor from outside" per the Brink UWA2 Modbus manual).
+        Signed, in tenths of a degree.
+        """
+        command = 4081
+        rr = self.client.read_input_registers(command, 1, unit=self.UNIT)
+        if rr.isError():
+            return self._handle_error_int(rr, "get_outdoor_temperature", command)
+
+        raw = rr.registers[0]
+        if raw >= 32768:  # 16-bit signed: outdoor temp can go negative in winter
+            raw -= 65536
+        result = raw / 10.0
+        _log.debug("get_outdoor_temperature: " + str(result) + " Celsius")
+        return result
+
+    def get_supply_fan_speed(self):
+        """
+        Gets the supply fan speed in RPM (register 4034, "Speed supply fan").
+        """
+        command = 4034
+        rr = self.client.read_input_registers(command, 1, unit=self.UNIT)
+        if rr.isError():
+            return self._handle_error_int(rr, "get_supply_fan_speed", command)
+
+        result = rr.registers[0]
+        _log.debug("get_supply_fan_speed: " + str(result) + " RPM")
+        return result
+
+    def get_exhaust_fan_speed(self):
+        """
+        Gets the exhaust fan speed in RPM (register 4044, "Speed exhaust fan").
+        """
+        command = 4044
+        rr = self.client.read_input_registers(command, 1, unit=self.UNIT)
+        if rr.isError():
+            return self._handle_error_int(rr, "get_exhaust_fan_speed", command)
+
+        result = rr.registers[0]
+        _log.debug("get_exhaust_fan_speed: " + str(result) + " RPM")
+        return result
+
     def get_bypass_status(self):
-        """ 
+        """
         Gets the bypass status eg. open, close etc.
         """
         command = 4050

@@ -112,6 +112,20 @@ class VigorDevice:
     def get_extract_humidity(self):
         return self._read_input(4047)[0]
 
+    def get_outdoor_temperature(self):
+        # 4081 "NTC 1: Air temperature sensor from outside" (Brink UWA2 manual).
+        # Signed, tenths of a degree (outdoor temp goes negative in winter).
+        raw = self._read_input(4081)[0]
+        if raw >= 32768:
+            raw -= 65536
+        return raw / 10.0
+
+    def get_supply_fan_speed(self):
+        return self._read_input(4034)[0]  # 4034 "Speed supply fan" (RPM)
+
+    def get_exhaust_fan_speed(self):
+        return self._read_input(4044)[0]  # 4044 "Speed exhaust fan" (RPM)
+
     def get_bypass_status(self):
         value = self._read_input(4050)[0]
         return _BYPASS_STATUS.get(value, f"unknown ({value})")
