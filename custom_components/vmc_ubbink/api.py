@@ -30,7 +30,7 @@ class VMCUbifluxAPI:
 
     def set_bypass_mode(self, mode):
         try:
-            response = requests.post(f"{self.base_url}/set_mode?mode={mode}", auth=self.auth, timeout=10)
+            response = requests.post(f"{self.base_url}/set_bypass?mode={mode}", auth=self.auth, timeout=10)
             return response.json()
         except requests.RequestException as e:
             return {"error": str(e)}

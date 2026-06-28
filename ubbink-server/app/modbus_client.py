@@ -45,6 +45,7 @@ class ModbusController:
             "exhaust_fan_speed": self.device.get_exhaust_fan_speed(),
             "airflow_mode": self.device.get_airflow_mode(),
             "bypass_status": self.device.get_bypass_status(),
+            "bypass_mode": self.device.get_bypass_mode(),
             "filter_status": self.device.get_filter_status(),
         }
 
