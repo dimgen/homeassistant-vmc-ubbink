@@ -37,6 +37,15 @@ def convert_from_bcd(bcd):
     return decimal
 
 
+def to_signed_16(value):
+    """Interpret a raw 16-bit Modbus register as a signed integer.
+
+    Modbus registers are untyped 16-bit words and pymodbus returns them
+    unsigned (0..65535); temperatures are signed and go negative in winter.
+    """
+    return value - 65536 if value >= 32768 else value
+
+
 _BYPASS_STATUS = {
     0: "initializing",
     1: "opening",
@@ -101,10 +110,10 @@ class VigorDevice:
         return self._read_input(4042)[0]
 
     def get_supply_temperature(self):
-        return self._read_input(4036)[0] / 10.0
+        return to_signed_16(self._read_input(4036)[0]) / 10.0
 
     def get_extract_temperature(self):
-        return self._read_input(4046)[0] / 10.0
+        return to_signed_16(self._read_input(4046)[0]) / 10.0
 
     def get_supply_humidity(self):
         return self._read_input(4037)[0]
@@ -114,11 +123,8 @@ class VigorDevice:
 
     def get_outdoor_temperature(self):
         # 4081 "NTC 1: Air temperature sensor from outside" (Brink UWA2 manual).
-        # Signed, tenths of a degree (outdoor temp goes negative in winter).
-        raw = self._read_input(4081)[0]
-        if raw >= 32768:
-            raw -= 65536
-        return raw / 10.0
+        # Signed, tenths of a degree (temps go negative in winter).
+        return to_signed_16(self._read_input(4081)[0]) / 10.0
 
     def get_supply_fan_speed(self):
         return self._read_input(4034)[0]  # 4034 "Speed supply fan" (RPM)

@@ -16,6 +16,14 @@ def _convert_from_bcd(bcd):
         place *= 10
     return decimal
 
+def _to_signed_16(value):
+    """ Interpret a raw 16-bit Modbus register as a signed integer.
+
+    Modbus registers are untyped 16-bit words and pymodbus returns them
+    unsigned (0..65535); temperatures are signed and go negative in winter.
+    """
+    return value - 65536 if value >= 32768 else value
+
 class VigorDevice():
     UNIT = 20
 
@@ -140,7 +148,7 @@ class VigorDevice():
         if rr.isError():
             return self._handle_error_int(rr, "get_supply_temperature", command)
 
-        result = rr.registers[0] / 10.0
+        result = _to_signed_16(rr.registers[0]) / 10.0
         _log.debug("get_supply_temperature: " + str(result) + " Celsius")
         return result
 
@@ -153,7 +161,7 @@ class VigorDevice():
         if rr.isError():
             return self._handle_error_int(rr, "get_extract_temperature", command)
 
-        result = rr.registers[0] / 10.0
+        result = _to_signed_16(rr.registers[0]) / 10.0
         _log.debug("get_extract_temperature: " + str(result) + " Celsius")
         return result
 
@@ -194,10 +202,7 @@ class VigorDevice():
         if rr.isError():
             return self._handle_error_int(rr, "get_outdoor_temperature", command)
 
-        raw = rr.registers[0]
-        if raw >= 32768:  # 16-bit signed: outdoor temp can go negative in winter
-            raw -= 65536
-        result = raw / 10.0
+        result = _to_signed_16(rr.registers[0]) / 10.0
         _log.debug("get_outdoor_temperature: " + str(result) + " Celsius")
         return result
 

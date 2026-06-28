@@ -39,6 +39,23 @@ def test_extract_temperature_divides_by_ten():
     client.read_input_registers.assert_called_once_with(4046, count=1, slave=7)
 
 
+def test_supply_temperature_negative_is_signed():
+    client = MagicMock()
+    # 65413 == -123 -> -12.3 °C (supply air after the exchanger can go sub-zero)
+    client.read_input_registers.return_value = _resp([65413])
+    dev = vigor.VigorDevice(client, slave=20)
+    assert dev.get_supply_temperature() == -12.3
+    client.read_input_registers.assert_called_once_with(4036, count=1, slave=20)
+
+
+def test_extract_temperature_negative_is_signed():
+    client = MagicMock()
+    client.read_input_registers.return_value = _resp([65413])
+    dev = vigor.VigorDevice(client, slave=7)
+    assert dev.get_extract_temperature() == -12.3
+    client.read_input_registers.assert_called_once_with(4046, count=1, slave=7)
+
+
 def test_outdoor_temperature_divides_by_ten():
     client = MagicMock()
     client.read_input_registers.return_value = _resp([376])
