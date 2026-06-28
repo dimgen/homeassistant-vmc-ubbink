@@ -280,13 +280,10 @@ class VigorDevice():
         controls it does not require enabling Modbus control (8000).
         """
         _bypass_modes = {"auto": 0, "closed": 1, "open": 2}
-        if isinstance(mode, int):
-            mode_value = min(2, max(0, mode))
-        elif mode in _bypass_modes:
-            mode_value = _bypass_modes[mode]
-        else:
+        if mode not in _bypass_modes:
             _log.error("set_bypass_mode: invalid mode " + str(mode))
             return
+        mode_value = _bypass_modes[mode]
 
         command = 6100
         rr = self.client.read_holding_registers(command, 1, unit=self.UNIT)
