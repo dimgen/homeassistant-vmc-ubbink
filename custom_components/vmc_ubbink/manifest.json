@@ -1,11 +1,11 @@
 {
   "domain": "vmc_ubbink",
   "name": "VMC Ubbink",
-  "version": "1.1.0",
+  "codeowners": ["@dimgen"],
   "config_flow": true,
-  "documentation": "https://github.com/dimgen/homeassistant-vmc-ubbink",
-  "requirements": ["pymodbus>=3.5.0,<4.0.0"],
-  "iot_class": "local_polling",
   "dependencies": [],
-  "codeowners": ["@dimgen"]
+  "documentation": "https://github.com/dimgen/homeassistant-vmc-ubbink",
+  "iot_class": "local_polling",
+  "requirements": ["pymodbus>=3.5.0,<4.0.0"],
+  "version": "1.1.0"
 }
