@@ -44,7 +44,7 @@ _READERS = {
 
 
 class DirectClient:
-    def __init__(self, host, port, slave, *, _device=None, _clock=time.monotonic):
+    def __init__(self, host, port, slave, *, _device=None, _client=None, _clock=time.monotonic):
         self._host = host
         self._port = port
         self._slave = slave
@@ -53,18 +53,52 @@ class DirectClient:
         self._cache = None
         self._cache_ts = 0.0
         if _device is not None:
-            # Test path: inject a ready VigorDevice, no real socket.
+            # Test path: inject a ready VigorDevice (and optionally a fake client).
             self._device = _device
-            self._client = None
+            self._client = _client
         else:
             self._client = ModbusTcpClient(
                 host, port=port, framer=RTU_FRAMER, timeout=10
             )
             self._device = VigorDevice(self._client, slave=slave)
 
+    def connect(self):
+        """Open the socket; return True if connected.
+
+        Lets the config-flow probe tell a gateway that refuses the connection
+        apart from one that connects but never answers Modbus. The injected
+        test device has no real socket, so it is treated as already connected.
+        """
+        if self._client is None:
+            return True
+        return self._client.connect()
+
     def _ensure_connected(self):
         if self._client is not None and not self._client.connected:
             self._client.connect()
+
+    def probe(self):
+        """Config-flow connectivity check.
+
+        Returns None on success, or an error key naming where it failed:
+        - "cannot_reach_gateway": the TCP socket could not be opened
+          (connection refused / timed out / host unreachable) — the gateway is
+          unreachable and the integration never talked to the VMC.
+        - "no_modbus_reply": the socket opened but the VMC did not answer a
+          Modbus read — wrong slave address/wiring/baud, or the gateway is not
+          in transparent RTU mode.
+        """
+        try:
+            reachable = self.connect()
+        except OSError:
+            reachable = False
+        if not reachable:
+            return "cannot_reach_gateway"
+        try:
+            serial = self._device.get_serial_number()
+        except Exception:  # noqa: BLE001 - reached the gateway, Modbus side failed
+            return "no_modbus_reply"
+        return None if serial else "no_modbus_reply"
 
     def close(self):
         if self._client is not None:

@@ -28,7 +28,9 @@
       }
     },
     "error": {
-      "cannot_connect": "Failed to connect: no answer from the VMC via the Waveshare gateway."
+      "cannot_connect": "Failed to connect: no answer from the VMC via the Waveshare gateway.",
+      "cannot_reach_gateway": "Could not reach the gateway at this IP and port (connection refused or timed out). Check that the RS485-to-ETH module is powered and reachable on the network, set to TCP Server mode, and listening on this port.",
+      "no_modbus_reply": "Reached the gateway, but the VMC did not answer. Check the Modbus slave address, the RS485 wiring (A→2, B→3, GND→1 on port X15), the serial settings (19200 baud, 8N1), and that the gateway uses transparent/raw RTU mode rather than a Modbus-TCP gateway."
     }
   },
   "options": {
