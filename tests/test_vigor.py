@@ -1,4 +1,7 @@
+import inspect
 from unittest.mock import MagicMock
+
+import pytest
 
 import vigor
 
@@ -20,7 +23,7 @@ def test_serial_number_bcd_zfill():
     client.read_input_registers.return_value = _resp([0x0012, 0x0034, 0x0056])
     dev = vigor.VigorDevice(client, slave=20)
     assert dev.get_serial_number() == "001200340056"
-    client.read_input_registers.assert_called_once_with(4010, count=3, slave=20)
+    client.read_input_registers.assert_called_once_with(4010, count=3, device_id=20)
 
 
 def test_supply_temperature_divides_by_ten():
@@ -28,7 +31,7 @@ def test_supply_temperature_divides_by_ten():
     client.read_input_registers.return_value = _resp([215])
     dev = vigor.VigorDevice(client, slave=20)
     assert dev.get_supply_temperature() == 21.5
-    client.read_input_registers.assert_called_once_with(4036, count=1, slave=20)
+    client.read_input_registers.assert_called_once_with(4036, count=1, device_id=20)
 
 
 def test_extract_temperature_divides_by_ten():
@@ -36,7 +39,7 @@ def test_extract_temperature_divides_by_ten():
     client.read_input_registers.return_value = _resp([189])
     dev = vigor.VigorDevice(client, slave=7)
     assert dev.get_extract_temperature() == 18.9
-    client.read_input_registers.assert_called_once_with(4046, count=1, slave=7)
+    client.read_input_registers.assert_called_once_with(4046, count=1, device_id=7)
 
 
 def test_supply_temperature_negative_is_signed():
@@ -45,7 +48,7 @@ def test_supply_temperature_negative_is_signed():
     client.read_input_registers.return_value = _resp([65413])
     dev = vigor.VigorDevice(client, slave=20)
     assert dev.get_supply_temperature() == -12.3
-    client.read_input_registers.assert_called_once_with(4036, count=1, slave=20)
+    client.read_input_registers.assert_called_once_with(4036, count=1, device_id=20)
 
 
 def test_extract_temperature_negative_is_signed():
@@ -53,7 +56,7 @@ def test_extract_temperature_negative_is_signed():
     client.read_input_registers.return_value = _resp([65413])
     dev = vigor.VigorDevice(client, slave=7)
     assert dev.get_extract_temperature() == -12.3
-    client.read_input_registers.assert_called_once_with(4046, count=1, slave=7)
+    client.read_input_registers.assert_called_once_with(4046, count=1, device_id=7)
 
 
 def test_outdoor_temperature_divides_by_ten():
@@ -61,7 +64,7 @@ def test_outdoor_temperature_divides_by_ten():
     client.read_input_registers.return_value = _resp([376])
     dev = vigor.VigorDevice(client, slave=20)
     assert dev.get_outdoor_temperature() == 37.6
-    client.read_input_registers.assert_called_once_with(4081, count=1, slave=20)
+    client.read_input_registers.assert_called_once_with(4081, count=1, device_id=20)
 
 
 def test_outdoor_temperature_negative_is_signed():
@@ -70,7 +73,7 @@ def test_outdoor_temperature_negative_is_signed():
     client.read_input_registers.return_value = _resp([65413])
     dev = vigor.VigorDevice(client, slave=20)
     assert dev.get_outdoor_temperature() == -12.3
-    client.read_input_registers.assert_called_once_with(4081, count=1, slave=20)
+    client.read_input_registers.assert_called_once_with(4081, count=1, device_id=20)
 
 
 def test_humidity_passthrough():
@@ -78,7 +81,7 @@ def test_humidity_passthrough():
     client.read_input_registers.return_value = _resp([47])
     dev = vigor.VigorDevice(client, slave=20)
     assert dev.get_supply_humidity() == 47
-    client.read_input_registers.assert_called_once_with(4037, count=1, slave=20)
+    client.read_input_registers.assert_called_once_with(4037, count=1, device_id=20)
 
 
 def test_extract_humidity_register():
@@ -86,7 +89,7 @@ def test_extract_humidity_register():
     client.read_input_registers.return_value = _resp([55])
     dev = vigor.VigorDevice(client, slave=20)
     assert dev.get_extract_humidity() == 55
-    client.read_input_registers.assert_called_once_with(4047, count=1, slave=20)
+    client.read_input_registers.assert_called_once_with(4047, count=1, device_id=20)
 
 
 def test_pressure_and_airflow_registers():
@@ -108,7 +111,7 @@ def test_supply_fan_speed_register():
     client.read_input_registers.return_value = _resp([1238])
     dev = vigor.VigorDevice(client, slave=20)
     assert dev.get_supply_fan_speed() == 1238
-    client.read_input_registers.assert_called_once_with(4034, count=1, slave=20)
+    client.read_input_registers.assert_called_once_with(4034, count=1, device_id=20)
 
 
 def test_exhaust_fan_speed_register():
@@ -116,7 +119,7 @@ def test_exhaust_fan_speed_register():
     client.read_input_registers.return_value = _resp([980])
     dev = vigor.VigorDevice(client, slave=7)
     assert dev.get_exhaust_fan_speed() == 980
-    client.read_input_registers.assert_called_once_with(4044, count=1, slave=7)
+    client.read_input_registers.assert_called_once_with(4044, count=1, device_id=7)
 
 
 def test_bypass_status_map():
@@ -141,7 +144,7 @@ def test_get_bypass_mode_map():
     assert dev.get_bypass_mode() == "open"
     client.read_holding_registers.return_value = _resp([9])
     assert dev.get_bypass_mode() == "unknown (9)"
-    client.read_holding_registers.assert_called_with(6100, count=1, slave=20)
+    client.read_holding_registers.assert_called_with(6100, count=1, device_id=20)
 
 
 def test_set_bypass_mode_writes_6100_when_changed():
@@ -150,7 +153,7 @@ def test_set_bypass_mode_writes_6100_when_changed():
     client.read_holding_registers.return_value = _resp([0])  # currently auto
     client.write_register.return_value = _resp([], error=False)
     dev.set_bypass_mode("open")
-    client.write_register.assert_called_once_with(6100, 2, slave=20)
+    client.write_register.assert_called_once_with(6100, 2, device_id=20)
 
 
 def test_set_bypass_mode_skips_write_when_already_set():
@@ -203,7 +206,7 @@ def test_set_airflow_mode_sets_modbus_mode_then_writes_8001():
     client.read_holding_registers.side_effect = [_resp([1]), _resp([0])]
     client.write_register.return_value = _resp([], error=False)
     dev.set_airflow_mode("high")
-    client.write_register.assert_called_once_with(8001, 3, slave=20)
+    client.write_register.assert_called_once_with(8001, 3, device_id=20)
 
 
 def test_set_airflow_mode_wall_unit_writes_8000_zero():
@@ -212,7 +215,7 @@ def test_set_airflow_mode_wall_unit_writes_8000_zero():
     client.read_holding_registers.return_value = _resp([1])  # 8000 != 0 → write 0
     client.write_register.return_value = _resp([], error=False)
     dev.set_airflow_mode("wall_unit")
-    client.write_register.assert_called_once_with(8000, 0, slave=20)
+    client.write_register.assert_called_once_with(8000, 0, device_id=20)
 
 
 def test_set_custom_airflow_rate_clamps_and_sets_mode_2():
@@ -221,7 +224,7 @@ def test_set_custom_airflow_rate_clamps_and_sets_mode_2():
     client.read_holding_registers.return_value = _resp([2])  # 8000 already 2
     client.write_register.return_value = _resp([], error=False)
     dev.set_custom_airflow_rate(500)
-    client.write_register.assert_called_once_with(8002, 400, slave=20)
+    client.write_register.assert_called_once_with(8002, 400, device_id=20)
 
 
 def test_set_custom_airflow_rate_below_min_writes_zero():
@@ -230,14 +233,13 @@ def test_set_custom_airflow_rate_below_min_writes_zero():
     client.read_holding_registers.return_value = _resp([2])
     client.write_register.return_value = _resp([], error=False)
     dev.set_custom_airflow_rate(10)
-    client.write_register.assert_called_once_with(8002, 0, slave=20)
+    client.write_register.assert_called_once_with(8002, 0, device_id=20)
 
 
 def test_read_error_raises_modbus_error():
     client = MagicMock()
     client.read_input_registers.return_value = _resp([], error=True)
     dev = vigor.VigorDevice(client, slave=20)
-    import pytest
     with pytest.raises(vigor.ModbusError):
         dev.get_supply_temperature()
 
@@ -248,3 +250,47 @@ def test_set_airflow_mode_ignores_unsupported_mode():
     dev.set_airflow_mode("custom")
     client.write_register.assert_not_called()
     client.read_holding_registers.assert_not_called()
+
+
+def test_unit_kwarg_picks_slave_for_old_pymodbus_client():
+    class OldClient:
+        def read_input_registers(self, address, count=1, slave=1):
+            ...
+
+    assert vigor._unit_kwarg(OldClient()) == "slave"
+
+
+def test_unit_kwarg_picks_device_id_for_new_pymodbus_client():
+    class NewClient:
+        def read_input_registers(self, address, count=1, device_id=1):
+            ...
+
+    assert vigor._unit_kwarg(NewClient()) == "device_id"
+
+
+def test_unit_kwarg_defaults_to_device_id_when_unintrospectable():
+    # A bare MagicMock has signature (*args, **kwargs); fall back to the modern name.
+    assert vigor._unit_kwarg(MagicMock()) == "device_id"
+
+
+def test_unit_kwarg_matches_installed_pymodbus_signature():
+    # Regression guard for the slave= -> device_id= rename (pymodbus 3.10): the
+    # resolved keyword must actually exist in the installed client's signature.
+    from pymodbus.client import ModbusTcpClient
+
+    client = ModbusTcpClient("127.0.0.1", port=5020)
+    kw = vigor._unit_kwarg(client)
+    params = inspect.signature(client.read_input_registers).parameters
+    assert kw in params
+
+
+def test_real_client_read_does_not_raise_typeerror_on_unit_kwarg():
+    # End-to-end guard: a real VigorDevice read against a dead port must fail at
+    # the transport layer, never with a TypeError from a wrong unit-id kwarg.
+    from pymodbus.client import ModbusTcpClient
+
+    client = ModbusTcpClient("127.0.0.1", port=5020)  # nothing listening
+    dev = vigor.VigorDevice(client, slave=20)
+    with pytest.raises(Exception) as exc:
+        dev.get_serial_number()
+    assert not isinstance(exc.value, TypeError)
