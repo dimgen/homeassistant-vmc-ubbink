@@ -2,11 +2,14 @@
 
 Line-by-line port of ubbink-server/app/pyubbink.py. Differences from the original
 (which targets pymodbus 2.5.3):
-- kwarg `unit=` -> `slave=` (correct for pymodbus 3.x; pymodbus 4.0 will use `device_id=`);
+- the per-request unit-id keyword is resolved at runtime (see _unit_kwarg): it was
+  `unit=` (<3.0), `slave=` (3.0-3.9), then `device_id=` (3.10+) -- all within our
+  `pymodbus>=3.5,<4.0` pin, so we cannot hard-code one name;
 - `count` is passed as a keyword (it is keyword-only in 3.x);
 - read/write failures raise ModbusError instead of returning "error"/-1, so that
   DirectClient can degrade a single failing register to None.
 """
+import inspect
 import logging
 
 _LOGGER = logging.getLogger(__name__)
@@ -46,6 +49,24 @@ def to_signed_16(value):
     return value - 65536 if value >= 32768 else value
 
 
+def _unit_kwarg(client):
+    """Resolve pymodbus's per-request unit-id keyword for this client.
+
+    pymodbus renamed it over versions: ``slave=`` (3.0-3.9) was replaced by
+    ``device_id=`` in 3.10, and both fall inside our ``pymodbus>=3.5,<4.0`` pin,
+    so passing the wrong one raises ``TypeError`` and breaks every read/write.
+    Inspect the client's read method and pick the name it accepts, defaulting to
+    the modern ``device_id`` when the signature can't be introspected.
+    """
+    try:
+        params = inspect.signature(client.read_input_registers).parameters
+    except (TypeError, ValueError):
+        return "device_id"
+    if "slave" in params and "device_id" not in params:
+        return "slave"
+    return "device_id"
+
+
 _BYPASS_STATUS = {
     0: "initializing",
     1: "opening",
@@ -68,21 +89,23 @@ class VigorDevice:
     def __init__(self, client, slave=20):
         self.client = client
         self.slave = slave
+        # pymodbus renamed slave= -> device_id= in 3.10; resolve it once.
+        self._unit_kw = _unit_kwarg(client)
 
     def _read_input(self, address, count=1):
-        rr = self.client.read_input_registers(address, count=count, slave=self.slave)
+        rr = self.client.read_input_registers(address, count=count, **{self._unit_kw: self.slave})
         if rr.isError():
             raise ModbusError(f"read_input_registers {address} failed: {rr}")
         return rr.registers
 
     def _read_holding(self, address, count=1):
-        rr = self.client.read_holding_registers(address, count=count, slave=self.slave)
+        rr = self.client.read_holding_registers(address, count=count, **{self._unit_kw: self.slave})
         if rr.isError():
             raise ModbusError(f"read_holding_registers {address} failed: {rr}")
         return rr.registers
 
     def _write(self, address, value):
-        rr = self.client.write_register(address, value, slave=self.slave)
+        rr = self.client.write_register(address, value, **{self._unit_kw: self.slave})
         if rr.isError():
             raise ModbusError(f"write_register {address}={value} failed: {rr}")
 

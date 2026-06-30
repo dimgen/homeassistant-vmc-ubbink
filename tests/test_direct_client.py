@@ -120,3 +120,57 @@ def test_set_bypass_mode_invalidates_cache():
     client.set_bypass_mode("closed")
     client.get_data()  # cache invalidated → re-poll even within TTL
     assert dev.get_serial_number.call_count == 2
+
+
+def test_probe_success_returns_none():
+    dev = _device_returning(_FULL)
+    client = direct.DirectClient("1.2.3.4", 502, 20, _device=dev, _clock=FakeClock())
+    assert client.probe() is None
+
+
+def test_probe_cannot_reach_gateway_when_socket_refused():
+    dev = _device_returning(_FULL)
+    fake_client = MagicMock()
+    fake_client.connect.return_value = False  # connection refused / timed out
+    client = direct.DirectClient(
+        "1.2.3.4", 502, 20, _device=dev, _client=fake_client, _clock=FakeClock()
+    )
+    assert client.probe() == "cannot_reach_gateway"
+    dev.get_serial_number.assert_not_called()  # never reached the VMC
+
+
+def test_probe_no_modbus_reply_when_read_raises():
+    dev = _device_returning(_FULL)
+    dev.get_serial_number.side_effect = vigor.ModbusError("no reply")
+    client = direct.DirectClient("1.2.3.4", 502, 20, _device=dev, _clock=FakeClock())
+    assert client.probe() == "no_modbus_reply"
+
+
+def test_probe_no_modbus_reply_when_serial_empty():
+    dev = _device_returning(_FULL)
+    dev.get_serial_number.return_value = ""
+    client = direct.DirectClient("1.2.3.4", 502, 20, _device=dev, _clock=FakeClock())
+    assert client.probe() == "no_modbus_reply"
+
+
+def test_probe_cannot_reach_gateway_when_connect_raises_oserror():
+    dev = _device_returning(_FULL)
+    fake_client = MagicMock()
+    fake_client.connect.side_effect = OSError("[Errno 111] Connection refused")
+    client = direct.DirectClient(
+        "1.2.3.4", 502, 20, _device=dev, _client=fake_client, _clock=FakeClock()
+    )
+    assert client.probe() == "cannot_reach_gateway"
+    dev.get_serial_number.assert_not_called()
+
+
+def test_probe_success_via_real_client_connect():
+    dev = _device_returning(_FULL)
+    fake_client = MagicMock()
+    fake_client.connect.return_value = True  # exercise the production connect() branch
+    client = direct.DirectClient(
+        "1.2.3.4", 502, 20, _device=dev, _client=fake_client, _clock=FakeClock()
+    )
+    assert client.probe() is None
+    fake_client.connect.assert_called_once()
+    dev.get_serial_number.assert_called_once()

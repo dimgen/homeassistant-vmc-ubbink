@@ -50,16 +50,16 @@ class VMCUbifluxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_direct(self, user_input=None):
         errors = {}
         if user_input is not None:
-            ok = await self.hass.async_add_executor_job(
-                _can_connect,
+            error = await self.hass.async_add_executor_job(
+                _probe,
                 user_input[CONF_HOST],
                 user_input[CONF_PORT],
                 user_input[CONF_SLAVE],
             )
-            if ok:
+            if error is None:
                 data = {CONF_MODE: MODE_DIRECT, **user_input}
                 return self.async_create_entry(title="VMC Ubiflux", data=data)
-            errors["base"] = "cannot_connect"
+            errors["base"] = error
 
         return self.async_show_form(
             step_id="direct",
@@ -78,16 +78,16 @@ class VMCUbifluxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return VMCUbifluxOptionsFlowHandler()
 
 
-def _can_connect(host, port, slave):
-    """Probe by reading serial_number (4010). Runs in the executor."""
+def _probe(host, port, slave):
+    """Probe the gateway/VMC. Runs in the executor.
+
+    Returns None on success, or an error key ("cannot_reach_gateway" /
+    "no_modbus_reply") matching the messages in strings.json.
+    """
     from .direct import DirectClient
 
     client = DirectClient(host, port, slave)
     try:
-        client._ensure_connected()
-        serial = client._device.get_serial_number()
-        return bool(serial)
-    except Exception:  # noqa: BLE001
-        return False
+        return client.probe()
     finally:
         client.close()
