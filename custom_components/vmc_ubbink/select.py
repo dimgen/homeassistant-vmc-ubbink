@@ -1,9 +1,13 @@
+import logging
+
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType
 
 from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 MODES = ["wall_unit", "holiday", "low", "normal", "high", "custom"]
 BYPASS_MODES = ["auto", "closed", "open"]
@@ -49,6 +53,16 @@ class VMCUbifluxSelect(SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Select new mode."""
+        if option == "custom":
+            # "custom" is a device state, not a settable mode: the unit enters it
+            # when you set an Airflow Rate (the number entity), which is what makes
+            # airflow_mode read back as "custom". Selecting it here would be a no-op
+            # on the device, so ignore it and keep showing the real current mode.
+            _LOGGER.debug(
+                "Airflow Mode 'custom' is not directly selectable; set the Airflow Rate instead"
+            )
+            self.async_write_ha_state()
+            return
         self._pending_option = option
         self.async_write_ha_state()
         await self.hass.async_add_executor_job(self.api.set_airflow_mode, option)

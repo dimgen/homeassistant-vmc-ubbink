@@ -198,8 +198,12 @@ class VigorDevice:
         if mode == "wall_unit":
             self.set_modbus_mode(0)
             return
+        if mode == "custom":
+            # "custom" is not a settable mode: enter it by writing a rate to 8002
+            # (set_custom_airflow_rate), not via 8001. Expected no-op, not an error.
+            _LOGGER.debug("set_airflow_mode('custom') ignored; set an airflow rate instead")
+            return
         if mode not in _AIRFLOW_MODE_TO_8001:
-            # "custom" and other modes are not set via 8001 (custom = set a rate via 8002).
             _LOGGER.warning("set_airflow_mode: unsupported mode %r, ignored", mode)
             return
         mode_value = _AIRFLOW_MODE_TO_8001[mode]
