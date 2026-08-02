@@ -1,6 +1,11 @@
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.helpers.selector import (
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
+)
 
 from .const import (
     DOMAIN,
@@ -14,12 +19,17 @@ from .const import (
     CONF_SLAVE,
     DEFAULT_HOST,
     DEFAULT_PORT,
-    DEFAULT_USERNAME,
-    DEFAULT_PASSWORD,
     DEFAULT_TCP_PORT,
     DEFAULT_SLAVE,
 )
 from .options_flow import VMCUbifluxOptionsFlowHandler
+
+PASSWORD_SELECTOR = TextSelector(
+    TextSelectorConfig(
+        type=TextSelectorType.PASSWORD,
+        autocomplete="current-password",
+    )
+)
 
 
 class VMCUbifluxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -41,8 +51,8 @@ class VMCUbifluxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 {
                     vol.Required(CONF_HOST, default=DEFAULT_HOST): str,
                     vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
-                    vol.Required(CONF_USERNAME, default=DEFAULT_USERNAME): str,
-                    vol.Required(CONF_PASSWORD, default=DEFAULT_PASSWORD): str,
+                    vol.Required(CONF_USERNAME): str,
+                    vol.Required(CONF_PASSWORD): PASSWORD_SELECTOR,
                 }
             ),
         )

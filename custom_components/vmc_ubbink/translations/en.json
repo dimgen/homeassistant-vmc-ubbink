@@ -19,6 +19,7 @@
       },
       "server": {
         "title": "Server (HTTP)",
+        "description": "Enter the credentials configured in ubbink-server/.env. New setups do not pre-fill the published defaults.",
         "data": {
           "host": "Server host",
           "port": "Server port",
@@ -53,6 +54,7 @@
       },
       "server": {
         "title": "Server (HTTP)",
+        "description": "Enter the credentials configured in ubbink-server/.env. Existing saved credentials are retained when switching modes.",
         "data": {
           "host": "Server host",
           "port": "Server port",
