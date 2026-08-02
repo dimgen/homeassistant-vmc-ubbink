@@ -61,6 +61,7 @@ over HTTP. See the server setup below. Existing installs keep working unchanged.
   ```sh
   git clone https://github.com/dimgen/homeassistant-vmc-ubbink.git
   cd homeassistant-vmc-ubbink/ubbink-server
+  # Before first start, edit .env and replace the published username/password.
   docker compose up --build -d
   ```
 
@@ -289,7 +290,7 @@ Also, it seems that you cannot set an airflow lower than the controller's settin
 - Restart Home Assistant after adding the integration.
 - Check the API response manually:
   ```sh
-  curl -u admin:secret http://server-ip:8085/data
+  curl -u '<username>:<password>' http://server-ip:8085/data
   ```
 
 ---
@@ -299,4 +300,3 @@ This project is licensed under the **MIT License**.
 
 ## 👨‍💻 Contributing
 Pull requests are welcome! If you find issues, feel free to open an [issue](https://github.com/dimgen/homeassistant-vmc-ubbink/issues).
-
