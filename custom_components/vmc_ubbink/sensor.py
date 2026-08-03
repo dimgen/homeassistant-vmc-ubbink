@@ -80,15 +80,21 @@ SENSOR_TYPES = {
     },
     "airflow_mode": {
         "name": "Airflow Mode",
-        "unit": None,  # just a string
+        "unit": None,
+        "device_class": "enum",
+        "options": ["wall_unit", "custom", "holiday", "low", "normal", "high"],
     },
     "bypass_status": {
         "name": "Bypass Status",
         "unit": None,
+        "device_class": "enum",
+        "options": ["initializing", "opening", "closing", "open", "closed"],
     },
     "filter_status": {
         "name": "Filter Status",
         "unit": None,
+        "device_class": "enum",
+        "options": ["normal", "dirty"],
     },
     "serial_number": {
         "name": "Serial Number",
@@ -130,6 +136,7 @@ class VMCUbifluxSensor(SensorEntity):
         self._attr_native_unit_of_measurement = params["unit"]
         self._attr_device_class = params.get("device_class")
         self._attr_state_class = params.get("state_class")
+        self._attr_options = params.get("options")
 
         # State will be stored in _attr_native_value
         self._attr_native_value = None
@@ -156,4 +163,9 @@ class VMCUbifluxSensor(SensorEntity):
         if not data or "error" in data:
             self._attr_native_value = None
         else:
-            self._attr_native_value = data.get(self._sensor_type, None)
+            value = data.get(self._sensor_type, None)
+            if self._attr_options is not None and value not in self._attr_options:
+                # e.g. "unknown (5)" from an unmapped register: an enum sensor
+                # rejects values outside its options list
+                value = None
+            self._attr_native_value = value
