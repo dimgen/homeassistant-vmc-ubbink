@@ -1,4 +1,4 @@
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, call
 
 import pytest
 
@@ -73,6 +73,112 @@ def test_get_data_repolls_after_ttl():
     clock.t += 10  # > CACHE_TTL
     client.get_data()
     assert dev.get_serial_number.call_count == 2
+
+
+@pytest.mark.parametrize("error_type", [ConnectionResetError, BrokenPipeError])
+def test_transport_failure_reconnects_and_caches_fresh_poll(error_type):
+    dev = _device_returning(_FULL)
+    # Fail partway through the poll: the retry must re-read earlier fields too.
+    dev.get_serial_number.side_effect = ["old serial", "new serial"]
+    dev.get_supply_temperature.side_effect = [error_type("connection lost"), 22.0]
+    transport = MagicMock(connected=True)
+    clock = FakeClock()
+    client = direct.DirectClient(
+        "1.2.3.4", 502, 20, _device=dev, _client=transport, _clock=clock
+    )
+    events = MagicMock()
+    events.attach_mock(dev.get_serial_number, "read_serial")
+    events.attach_mock(transport.close, "close")
+    events.attach_mock(transport.connect, "connect")
+
+    def reconnect():
+        assert client._lock.locked()
+        clock.t += direct.CACHE_TTL + 1
+        return True
+
+    transport.connect.side_effect = reconnect
+
+    data = client.get_data()
+
+    assert data["serial_number"] == "new serial"
+    assert data["supply_temperature"] == 22.0
+    assert events.mock_calls == [
+        call.read_serial(), call.close(), call.connect(), call.read_serial()
+    ]
+    # Cache lifetime starts after recovery, not before the failed poll.
+    assert client.get_data() is data
+    assert dev.get_serial_number.call_count == 2
+
+
+@pytest.mark.parametrize("failure", ["refused", "connect_error", "poll_error"])
+def test_failed_recovery_returns_error_and_next_poll_can_recover(failure):
+    dev = _device_returning(_FULL)
+    clock = FakeClock()
+    transport = MagicMock(connected=True)
+    client = direct.DirectClient(
+        "1.2.3.4", 502, 20, _device=dev, _client=transport, _clock=clock
+    )
+    client.get_data()  # Seed a cache which must not hide subsequent failures.
+    clock.t += direct.CACHE_TTL + 1
+    dev.get_serial_number.reset_mock()
+    dev.get_serial_number.side_effect = ConnectionResetError("connection lost")
+    expected = "connection lost"
+    expected_reads = 1
+    if failure == "refused":
+        transport.connect.return_value = False
+    elif failure == "connect_error":
+        transport.connect.side_effect = OSError("gateway unavailable")
+        expected = "gateway unavailable"
+    else:
+        transport.connect.return_value = True
+        dev.get_serial_number.side_effect = [
+            ConnectionResetError("connection lost"), BrokenPipeError("retry failed")
+        ]
+        expected = "retry failed"
+        expected_reads = 2
+
+    assert client.get_data() == {"error": expected}
+    transport.close.assert_called_once()
+    transport.connect.assert_called_once()
+    assert dev.get_serial_number.call_count == expected_reads
+
+    # No TTL wait or integration reload is needed once the gateway recovers.
+    transport.connected = False
+    transport.connect.side_effect = None
+    transport.connect.return_value = True
+    dev.get_serial_number.side_effect = None
+    assert client.get_data()["serial_number"] == _FULL["serial_number"]
+    assert transport.connect.call_count == 2
+
+
+def test_initial_connection_exception_can_recover():
+    dev = _device_returning(_FULL)
+    transport = MagicMock(connected=False)
+    transport.connect.side_effect = [OSError("connection lost"), True]
+    client = direct.DirectClient(
+        "1.2.3.4", 502, 20, _device=dev, _client=transport, _clock=FakeClock()
+    )
+
+    assert client.get_data()["serial_number"] == _FULL["serial_number"]
+    transport.close.assert_called_once()
+    assert transport.connect.call_count == 2
+    dev.get_serial_number.assert_called_once()
+
+
+@pytest.mark.parametrize("error_type", [vigor.ModbusError, IndexError])
+def test_field_error_does_not_reconnect(error_type):
+    dev = _device_returning(_FULL)
+    dev.get_supply_humidity.side_effect = error_type("unsupported register")
+    transport = MagicMock(connected=True)
+    client = direct.DirectClient(
+        "1.2.3.4", 502, 20, _device=dev, _client=transport, _clock=FakeClock()
+    )
+
+    data = client.get_data()
+    assert data["supply_humidity"] is None
+    assert data["supply_temperature"] == _FULL["supply_temperature"]
+    transport.close.assert_not_called()
+    transport.connect.assert_not_called()
 
 
 def test_field_level_error_becomes_none():

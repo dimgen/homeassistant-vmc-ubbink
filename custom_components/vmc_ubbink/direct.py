@@ -126,8 +126,17 @@ class DirectClient:
                 self._ensure_connected()
                 data = self._poll()
             except Exception as err:  # noqa: BLE001 - transport failure
-                _LOGGER.warning("VMC direct poll failed: %s", err)
-                return {"error": str(err)}
+                _LOGGER.warning("VMC direct poll failed: %s; reconnecting", err)
+                try:
+                    # A broken socket may still report connected. Reopen it and
+                    # retry the entire read once, while holding the same lock.
+                    self.close()
+                    if not self.connect():
+                        return {"error": str(err)}
+                    data = self._poll()
+                except Exception as reconnect_err:  # noqa: BLE001 - recovery failed
+                    _LOGGER.warning("VMC direct reconnect failed: %s", reconnect_err)
+                    return {"error": str(reconnect_err)}
             self._cache = data
             self._cache_ts = self._clock()
             return data
