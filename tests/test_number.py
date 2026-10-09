@@ -41,7 +41,7 @@ def _setup_entry(data, options):
 
 @pytest.mark.parametrize(
     ("model", "min_value", "max_value"),
-    [("W325", 50, 325), ("W400", 50, 400), ("W600", 100, 600)],
+    [("W225", 40, 225), ("W325", 50, 325), ("W400", 50, 400), ("W600", 100, 600)],
 )
 def test_airflow_rate_bounds_follow_the_model(model, min_value, max_value):
     number = _number(model)

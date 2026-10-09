@@ -9,7 +9,7 @@ Line-by-line port of ubbink-server/app/pyubbink.py. Differences from the origina
 - read/write failures raise ModbusError instead of returning "error"/-1, so that
   DirectClient can degrade a single failing register to None;
 - set_custom_airflow_rate writes the value as given: the number entity bounds it
-  by the configured model (W325/W400/W600), the original clamps to 50-600.
+  by the configured model (W225/W325/W400/W600), the original clamps to 40-600.
 """
 import inspect
 import logging
@@ -86,7 +86,7 @@ _BYPASS_MODE_TO_6100 = {"auto": 0, "closed": 1, "open": 2}
 
 
 class VigorDevice:
-    """Named read/write commands for the Vigor W325/W400/W600 over a pymodbus client."""
+    """Named read/write commands for the Vigor W225/W325/W400/W600 over a pymodbus client."""
 
     def __init__(self, client, slave=20):
         self.client = client

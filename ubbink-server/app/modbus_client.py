@@ -65,9 +65,9 @@ class ModbusController:
         if not self.device:
             return {"error": "Device not connected"}
 
-        # Widest range over the W325/W400/W600; the unit rejects what its type cannot do.
-        if rate < 50 or rate > 600:
-            return {"error": "Invalid rate. Must be between 50 and 600 m³/h"}
+        # Widest range over the W225/W325/W400/W600; the unit rejects what its type cannot do.
+        if rate < 40 or rate > 600:
+            return {"error": "Invalid rate. Must be between 40 and 600 m³/h"}
 
         self.device.set_custom_airflow_rate(rate)
         return {"status": f"Airflow rate set to {rate} m³/h"}

@@ -27,6 +27,7 @@ DEFAULT_SLAVE = 20       # VMC Modbus slave address (UNIT in app/pyubbink.py)
 # manuals (menu 1.1-1.4); the unit itself rejects values outside its own range.
 CONF_MODEL = "model"
 MODELS = {
+    "W225": (40, 225),
     "W325": (50, 325),
     "W400": (50, 400),
     "W600": (100, 600),
