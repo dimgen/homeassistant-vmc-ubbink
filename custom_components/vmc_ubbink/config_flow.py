@@ -21,6 +21,9 @@ from .const import (
     DEFAULT_PORT,
     DEFAULT_TCP_PORT,
     DEFAULT_SLAVE,
+    CONF_MODEL,
+    DEFAULT_MODEL,
+    MODELS,
 )
 from .options_flow import VMCUbifluxOptionsFlowHandler
 
@@ -53,6 +56,7 @@ class VMCUbifluxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
                     vol.Required(CONF_USERNAME): str,
                     vol.Required(CONF_PASSWORD): PASSWORD_SELECTOR,
+                    vol.Required(CONF_MODEL, default=DEFAULT_MODEL): vol.In(list(MODELS)),
                 }
             ),
         )
@@ -78,6 +82,7 @@ class VMCUbifluxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_HOST): str,
                     vol.Required(CONF_PORT, default=DEFAULT_TCP_PORT): int,
                     vol.Required(CONF_SLAVE, default=DEFAULT_SLAVE): int,
+                    vol.Required(CONF_MODEL, default=DEFAULT_MODEL): vol.In(list(MODELS)),
                 }
             ),
             errors=errors,

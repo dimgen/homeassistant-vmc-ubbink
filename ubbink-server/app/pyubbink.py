@@ -397,16 +397,16 @@ class VigorDevice():
 
     def set_custom_airflow_rate(self, value):
         """ 
-        Sets the preset value of airflow in qubic meters (only Vigor W400 model)
+        Sets the preset value of airflow in cubic meters per hour (the unit enforces its own model range)
 
         NOTE: if you read back the value with get_supply_airflow_preset, you have to wait  a short time before doing it
         """
         self.set_modbus_mode(2)
 
-        if value < 50:
+        if value < 40:
             preset_value = 0
-        elif value > 400:
-            preset_value = 400
+        elif value > 600:
+            preset_value = 600
         else:
             preset_value = value
                 
@@ -417,7 +417,7 @@ class VigorDevice():
 
         value = rr.registers[0]
 #        if value != preset_value:
-        _log.debug("set_airflow_rate: setting airflow rate to " + str(preset_value) + " in range [0, 50-400]")
+        _log.debug("set_airflow_rate: setting airflow rate to " + str(preset_value) + " in range [0, 40-600]")
         rr = self.client.write_register(command, preset_value, unit=self.UNIT)
         if rr.isError():
             return self._handle_error(rr, "set_airflow_rate.2", command)

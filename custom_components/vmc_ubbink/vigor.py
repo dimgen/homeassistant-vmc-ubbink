@@ -7,7 +7,9 @@ Line-by-line port of ubbink-server/app/pyubbink.py. Differences from the origina
   `pymodbus>=3.5,<4.0` pin, so we cannot hard-code one name;
 - `count` is passed as a keyword (it is keyword-only in 3.x);
 - read/write failures raise ModbusError instead of returning "error"/-1, so that
-  DirectClient can degrade a single failing register to None.
+  DirectClient can degrade a single failing register to None;
+- set_custom_airflow_rate writes the value as given: the number entity bounds it
+  by the configured model (W225/W325/W400/W600), the original clamps to 40-600.
 """
 import inspect
 import logging
@@ -84,7 +86,7 @@ _BYPASS_MODE_TO_6100 = {"auto": 0, "closed": 1, "open": 2}
 
 
 class VigorDevice:
-    """Named read/write commands for the Vigor W325/W400 over a pymodbus client."""
+    """Named read/write commands for the Vigor W225/W325/W400/W600 over a pymodbus client."""
 
     def __init__(self, client, slave=20):
         self.client = client
@@ -212,11 +214,7 @@ class VigorDevice:
             self._write(8001, mode_value)
 
     def set_custom_airflow_rate(self, value):
+        # 8002 accepts "min. flow - max. flow" of the appliance type (UWA2 manual);
+        # the number entity already limits the slider to the configured model.
         self.set_modbus_mode(2)
-        if value < 50:
-            preset = 0
-        elif value > 400:
-            preset = 400
-        else:
-            preset = value
-        self._write(8002, preset)
+        self._write(8002, value)

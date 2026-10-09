@@ -1,5 +1,5 @@
 import inspect
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, call
 
 import pytest
 
@@ -218,22 +218,18 @@ def test_set_airflow_mode_wall_unit_writes_8000_zero():
     client.write_register.assert_called_once_with(8000, 0, device_id=20)
 
 
-def test_set_custom_airflow_rate_clamps_and_sets_mode_2():
+def test_set_custom_airflow_rate_writes_requested_value_and_sets_mode_2():
     client = MagicMock()
     dev = vigor.VigorDevice(client, slave=20)
-    client.read_holding_registers.return_value = _resp([2])  # 8000 already 2
+    client.read_holding_registers.return_value = _resp([1])  # 8000 = 1 -> write 2
     client.write_register.return_value = _resp([], error=False)
+    # 500 m3/h is above a W400 but valid on a W600: the model range lives in the
+    # number entity, the device itself rejects what its type cannot do.
     dev.set_custom_airflow_rate(500)
-    client.write_register.assert_called_once_with(8002, 400, device_id=20)
-
-
-def test_set_custom_airflow_rate_below_min_writes_zero():
-    client = MagicMock()
-    dev = vigor.VigorDevice(client, slave=20)
-    client.read_holding_registers.return_value = _resp([2])
-    client.write_register.return_value = _resp([], error=False)
-    dev.set_custom_airflow_rate(10)
-    client.write_register.assert_called_once_with(8002, 0, device_id=20)
+    assert client.write_register.call_args_list == [
+        call(8000, 2, device_id=20),
+        call(8002, 500, device_id=20),
+    ]
 
 
 def test_read_error_raises_modbus_error():

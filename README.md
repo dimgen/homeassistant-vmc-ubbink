@@ -1,6 +1,6 @@
 # VMC Ubbink Ubiflux Vigor Home Assistant Integration
 
-This integration allows you to connect and control your **Ubbink Ubiflux Vigor** ventilation system (**W325 or W400**) from Home Assistant.
+This integration allows you to connect and control your **Ubbink Ubiflux Vigor** ventilation system (**W225, W325, W400 or W600**) from Home Assistant.
 
 [![Open your Home Assistant instance and open this repository inside HACS.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=dimgen&repository=homeassistant-vmc-ubbink&category=integration)
 
@@ -66,6 +66,7 @@ over HTTP. See the server setup below. Existing installs keep working unchanged.
   ```
 
   By default the server exposes its API on **port 8085** (configurable via `.env`). The server code is based on [pyubbink](https://github.com/asillye/pyubbink).
+  Running a **W600** or a **W225**? Rebuild the server from this version: older servers only accept 50-400 m³/h.
 
 ---
 
@@ -76,6 +77,7 @@ over HTTP. See the server setup below. Existing installs keep working unchanged.
 3. Choose the connection mode and enter its details:
     - **Direct** — Waveshare gateway **IP**, **TCP port** (`502`), and **Modbus slave id** (`20`).
     - **Server** — server **host**, **port** (`8085`), and **username/password** (from the server `.env`).
+    - **Model** — `W225`, `W325`, `W400` or `W600`; it sets the **Airflow Rate** range. Installs made before this option existed behave as `W400` until you change it via **Configure**.
 4. Click **Submit**. You can switch the mode later via **Configure** without losing history.
 
 ### **2️⃣ Devices & Controls**
@@ -101,7 +103,7 @@ Once added, Home Assistant recognizes **VMC Ubiflux as a single device** with th
 | Name               | Entity ID                 | Type    | Options / Range |
 |--------------------|--------------------------|---------|-----------------|
 | **Airflow Mode**   | `select.vmc_airflow_mode` | Select  | `wall_unit`, `holiday`, `low`, `normal`, `high` |
-| **Airflow Rate**   | `number.vmc_airflow_rate` | Number  | `50-400` m³/h |
+| **Airflow Rate**   | `number.vmc_airflow_rate` | Number  | By **Model**: `40-225` (W225), `50-325` (W325), `50-400` (W400), `100-600` (W600) m³/h |
 
 ![Screenshot](screenshot.png)
 

@@ -1,3 +1,4 @@
+import enum
 import importlib.util
 import sys
 import types
@@ -21,7 +22,13 @@ def _load_component(monkeypatch):
     config_entries.ConfigEntry = type("ConfigEntry", (), {})
     core.HomeAssistant = type("HomeAssistant", (), {})
     exceptions.ConfigEntryNotReady = type("ConfigEntryNotReady", (Exception,), {})
+    # const.py imports DeviceEntryType; stub it so this test does not depend on
+    # the conftest stubs or on a homeassistant install.
+    device_registry = types.ModuleType("homeassistant.helpers.device_registry")
+    device_registry.DeviceEntryType = enum.Enum("DeviceEntryType", {"SERVICE": "service"})
     monkeypatch.setitem(sys.modules, "homeassistant", homeassistant)
+    monkeypatch.setitem(sys.modules, "homeassistant.helpers", types.ModuleType("homeassistant.helpers"))
+    monkeypatch.setitem(sys.modules, "homeassistant.helpers.device_registry", device_registry)
     monkeypatch.setitem(sys.modules, "homeassistant.config_entries", config_entries)
     monkeypatch.setitem(sys.modules, "homeassistant.core", core)
     monkeypatch.setitem(sys.modules, "homeassistant.exceptions", exceptions)

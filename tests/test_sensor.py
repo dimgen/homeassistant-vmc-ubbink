@@ -25,10 +25,11 @@ class FakeHass:
         return target()
 
 
-def _sensor(sensor_type, value):
+def _sensor(sensor_type, value, model="W400"):
     sensor = VMCUbifluxSensor(
         FakeAPI({sensor_type: value}),
         "test-entry",
+        model,
         sensor_type,
         SENSOR_TYPES[sensor_type],
     )
@@ -60,3 +61,10 @@ def test_enum_sensor_maps_unsupported_state_to_unknown(sensor_type):
     asyncio.run(sensor.async_update())
 
     assert sensor._attr_native_value is None
+
+
+def test_sensor_device_info_names_the_configured_model():
+    sensor = _sensor("serial_number", "001200340056", model="W600")
+
+    assert sensor.device_info["model"] == "Vigor W600"
+    assert sensor.device_info["identifiers"] == {("vmc_ubbink", "test-entry")}
