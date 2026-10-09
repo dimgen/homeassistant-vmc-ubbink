@@ -3,9 +3,8 @@ import logging
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType
 
-from .const import DOMAIN
+from .const import DOMAIN, CONF_MODEL, DEFAULT_MODEL, device_info, get_entry_value
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -14,10 +13,11 @@ BYPASS_MODES = ["auto", "closed", "open"]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities):
     api = hass.data[DOMAIN][entry.entry_id]
+    model = get_entry_value(entry, CONF_MODEL, DEFAULT_MODEL)
     async_add_entities(
         [
-            VMCUbifluxSelect(api, entry.entry_id),
-            VMCUbifluxBypassSelect(api, entry.entry_id),
+            VMCUbifluxSelect(api, entry.entry_id, model),
+            VMCUbifluxBypassSelect(api, entry.entry_id, model),
         ],
         update_before_add=True,
     )
@@ -28,22 +28,17 @@ class VMCUbifluxSelect(SelectEntity):
     _attr_name = "Airflow Mode"
     _attr_options = MODES
 
-    def __init__(self, api, entry_id):
+    def __init__(self, api, entry_id, model):
         self.api = api
         self._entry_id = entry_id
+        self._model = model
         self._attr_unique_id = f"vmc_airflow_mode_{entry_id}"
         self._attr_current_option = None
         self._pending_option = None  # For optimistic update
 
     @property
     def device_info(self):
-        return {
-            "identifiers": {(DOMAIN, self._entry_id)},
-            "name": "VMC Ubiflux",
-            "manufacturer": "Ubbink",
-            "model": "Vigor W325/W400",
-            "entry_type": DeviceEntryType.SERVICE,
-        }
+        return device_info(self._entry_id, self._model)
 
     @property
     def current_option(self):
@@ -84,22 +79,17 @@ class VMCUbifluxBypassSelect(SelectEntity):
     _attr_name = "Bypass Mode"
     _attr_options = BYPASS_MODES
 
-    def __init__(self, api, entry_id):
+    def __init__(self, api, entry_id, model):
         self.api = api
         self._entry_id = entry_id
+        self._model = model
         self._attr_unique_id = f"vmc_bypass_mode_{entry_id}"
         self._attr_current_option = None
         self._pending_option = None  # For optimistic update
 
     @property
     def device_info(self):
-        return {
-            "identifiers": {(DOMAIN, self._entry_id)},
-            "name": "VMC Ubiflux",
-            "manufacturer": "Ubbink",
-            "model": "Vigor W325/W400",
-            "entry_type": DeviceEntryType.SERVICE,
-        }
+        return device_info(self._entry_id, self._model)
 
     @property
     def current_option(self):

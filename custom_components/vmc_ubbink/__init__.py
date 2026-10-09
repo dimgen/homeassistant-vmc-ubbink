@@ -14,14 +14,11 @@ from .const import (
     DEFAULT_PASSWORD,
     DEFAULT_TCP_PORT,
     DEFAULT_SLAVE,
+    get_entry_value,
 )
 from .api import VMCUbifluxAPI
 
 PLATFORMS = ["sensor", "select", "number"]
-
-
-def get_entry_value(entry, key, default=None):
-    return entry.options.get(key) if key in entry.options else entry.data.get(key, default)
 
 
 def build_client(entry):

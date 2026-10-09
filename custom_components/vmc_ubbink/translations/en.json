@@ -14,7 +14,11 @@
         "data": {
           "host": "Waveshare IP address",
           "port": "TCP port",
-          "slave_id": "Modbus slave address"
+          "slave_id": "Modbus slave address",
+          "model": "Model"
+        },
+        "data_description": {
+          "model": "Ubiflux Vigor model; sets the Airflow Rate range (W325: 50-325, W400: 50-400, W600: 100-600 m³/h)."
         }
       },
       "server": {
@@ -24,7 +28,11 @@
           "host": "Server host",
           "port": "Server port",
           "username": "Username",
-          "password": "Password"
+          "password": "Password",
+          "model": "Model"
+        },
+        "data_description": {
+          "model": "Ubiflux Vigor model; sets the Airflow Rate range (W325: 50-325, W400: 50-400, W600: 100-600 m³/h)."
         }
       }
     },
@@ -49,7 +57,11 @@
         "data": {
           "host": "Waveshare IP address",
           "port": "TCP port",
-          "slave_id": "Modbus slave address"
+          "slave_id": "Modbus slave address",
+          "model": "Model"
+        },
+        "data_description": {
+          "model": "Ubiflux Vigor model; sets the Airflow Rate range (W325: 50-325, W400: 50-400, W600: 100-600 m³/h)."
         }
       },
       "server": {
@@ -59,7 +71,11 @@
           "host": "Server host",
           "port": "Server port",
           "username": "Username",
-          "password": "Password"
+          "password": "Password",
+          "model": "Model"
+        },
+        "data_description": {
+          "model": "Ubiflux Vigor model; sets the Airflow Rate range (W325: 50-325, W400: 50-400, W600: 100-600 m³/h)."
         }
       }
     }

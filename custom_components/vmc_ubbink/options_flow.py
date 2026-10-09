@@ -20,6 +20,10 @@ from .const import (
     DEFAULT_PORT,
     DEFAULT_TCP_PORT,
     DEFAULT_SLAVE,
+    CONF_MODEL,
+    DEFAULT_MODEL,
+    MODELS,
+    get_entry_value,
 )
 from .mode_options import get_mode_value, merge_mode_options
 
@@ -96,6 +100,10 @@ class VMCUbifluxOptionsFlowHandler(config_entries.OptionsFlow):
                     self._required_with_suggested_value(
                         MODE_SERVER, CONF_PASSWORD
                     ): PASSWORD_SELECTOR,
+                    vol.Required(
+                        CONF_MODEL,
+                        default=get_entry_value(self.config_entry, CONF_MODEL, DEFAULT_MODEL),
+                    ): vol.In(list(MODELS)),
                 }
             ),
         )
@@ -126,6 +134,10 @@ class VMCUbifluxOptionsFlowHandler(config_entries.OptionsFlow):
                             MODE_DIRECT, CONF_SLAVE, DEFAULT_SLAVE
                         ),
                     ): int,
+                    vol.Required(
+                        CONF_MODEL,
+                        default=get_entry_value(self.config_entry, CONF_MODEL, DEFAULT_MODEL),
+                    ): vol.In(list(MODELS)),
                 }
             ),
         )

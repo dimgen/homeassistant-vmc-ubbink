@@ -1,10 +1,9 @@
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType
 from datetime import timedelta
 
-from .const import DOMAIN
+from .const import DOMAIN, CONF_MODEL, DEFAULT_MODEL, device_info, get_entry_value
 
 SCAN_INTERVAL = timedelta(seconds=30)  # scan every 30 seconds
 
@@ -109,10 +108,11 @@ async def async_setup_entry(
         async_add_entities
 ):
     api = hass.data[DOMAIN][entry.entry_id]
+    model = get_entry_value(entry, CONF_MODEL, DEFAULT_MODEL)
 
     sensors = []
     for sensor_type, params in SENSOR_TYPES.items():
-        sensors.append(VMCUbifluxSensor(api, entry.entry_id, sensor_type, params))
+        sensors.append(VMCUbifluxSensor(api, entry.entry_id, model, sensor_type, params))
 
     # update_before_add=True will force Home Assistant to call update/async_update for each entity
     async_add_entities(sensors, update_before_add=True)
@@ -120,9 +120,10 @@ async def async_setup_entry(
 
 class VMCUbifluxSensor(SensorEntity):
 
-    def __init__(self, api, entry_id, sensor_type, params):
+    def __init__(self, api, entry_id, model, sensor_type, params):
         self.api = api
         self._entry_id = entry_id
+        self._model = model
         self._sensor_type = sensor_type
         self._params = params
 
@@ -143,13 +144,7 @@ class VMCUbifluxSensor(SensorEntity):
 
     @property
     def device_info(self):
-        return {
-            "identifiers": {(DOMAIN, self._entry_id)},
-            "name": "VMC Ubiflux",
-            "manufacturer": "Ubbink",
-            "model": "Vigor W325/W400",
-            "entry_type": DeviceEntryType.SERVICE,
-        }
+        return device_info(self._entry_id, self._model)
 
     @property
     def extra_state_attributes(self):

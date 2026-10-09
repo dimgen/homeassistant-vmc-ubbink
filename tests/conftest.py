@@ -11,10 +11,14 @@ sys.path.insert(0, str(_PKG))
 try:
     import homeassistant  # noqa: F401
 except ImportError:
-    # sensor.py imports homeassistant; stub the minimal surface it uses so the
-    # tests keep running without a homeassistant install.
+    # sensor.py / number.py / select.py import homeassistant; stub the minimal
+    # surface they use so the tests keep running without a homeassistant install.
     _sensor = types.ModuleType("homeassistant.components.sensor")
     _sensor.SensorEntity = type("SensorEntity", (), {})
+    _number = types.ModuleType("homeassistant.components.number")
+    _number.NumberEntity = type("NumberEntity", (), {})
+    _select = types.ModuleType("homeassistant.components.select")
+    _select.SelectEntity = type("SelectEntity", (), {})
     _config_entries = types.ModuleType("homeassistant.config_entries")
     _config_entries.ConfigEntry = type("ConfigEntry", (), {})
     _core = types.ModuleType("homeassistant.core")
@@ -24,6 +28,8 @@ except ImportError:
     sys.modules["homeassistant"] = types.ModuleType("homeassistant")
     sys.modules["homeassistant.components"] = types.ModuleType("homeassistant.components")
     sys.modules["homeassistant.components.sensor"] = _sensor
+    sys.modules["homeassistant.components.number"] = _number
+    sys.modules["homeassistant.components.select"] = _select
     sys.modules["homeassistant.config_entries"] = _config_entries
     sys.modules["homeassistant.core"] = _core
     sys.modules["homeassistant.helpers"] = types.ModuleType("homeassistant.helpers")
