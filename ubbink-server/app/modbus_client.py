@@ -65,7 +65,7 @@ class ModbusController:
         if not self.device:
             return {"error": "Device not connected"}
 
-        # Widest range over the W225/W325/W400/W600; the unit rejects what its type cannot do.
+        # Widest range over the W225 to W600 models; the unit rejects what its type cannot do.
         if rate < 40 or rate > 600:
             return {"error": "Invalid rate. Must be between 40 and 600 m³/h"}
 
