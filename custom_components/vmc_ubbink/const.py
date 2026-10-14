@@ -30,6 +30,7 @@ MODELS = {
     "W225": (40, 225),
     "W325": (50, 325),
     "W400": (50, 400),
+    "W450": (75, 450),
     "W600": (100, 600),
 }
 DEFAULT_MODEL = "W400"  # entries created before the option existed keep the 50-400 range
